@@ -1,0 +1,314 @@
+<?php
+require_once('CloudpaymentsAPI.php');
+/**
+ * @return mixed
+ */
+function cloudpayments_menu()
+{
+	$items['cloudpayments/check'] = array(
+		'title' => 'Check payment amount',
+		'page callback' => 'cloudpayments_check',
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+	);
+	$items['cloudpayments/pay'] = array(
+		'title' => 'Payed payment',
+		'page callback' => 'cloudpayments_pay',
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK,
+	);
+	$items['cloudpayments/confirm'] = array(
+		'title' => 'Сonfirm payment',
+		'page callback' => 'cloudpayments_confirm',
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK,
+	);
+	$items['cloudpayments/refund'] = array(
+		'title' => 'Refund payment',
+		'page callback' => 'cloudpayments_refund',
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK,
+	);
+	// Config page
+	$items['admin/config/system/cloudpayments'] = array(
+		'title' => t('CloudPayments Settings'),
+		'description' => t('CloudPayments Settings.'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('cloudpayments_admin_settings'),
+		'access arguments' => array('access cloudpayments settings'),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'cloudpayments.admin.inc',
+	);
+	return $items;
+}
+
+/**
+ * Добавляем кнопку оплаты при оформлении заказа
+ * @return array
+ */
+function cloudpayments_commerce_payment_method_info()
+{
+	$payment_methods = array();
+	$icon = theme('image', array(
+		'path' => drupal_get_path('module', 'cloudpayments') . '/images/icon_64.jpg',
+		'attributes' => array('class' => array('cloudpayments-logo')),
+	));
+	$display_title = 'CloudPayments<br/>' . $icon;
+	$payment_methods['cloudpayments'] = array(
+		'base' => 'cloudpayments',
+		'title' => t('CloudPayments'),
+		'short_title' => t('CloudPayments'),
+		'display_title' => $display_title,
+		'description' => t('Integration with CloudPayments.'),
+		'terminal' => FALSE,
+		'offsite' => TRUE,
+		// @todo Maybe better make it auto?
+		//'offsite_autoredirect' => TRUE,
+		'active' => TRUE,
+	);
+	
+	return $payment_methods;
+}
+
+/**
+ * Вызывается когда пользователь выбрал метод оплаты и перешел на следующий шаг
+ * @param $form
+ * @param $form_state
+ * @param $order
+ * @param $payment_method
+ * @return mixed
+ */
+function cloudpayments_redirect_form($form, &$form_state, $order, $payment_method) {
+	if (isset($_POST['success'])) {
+		drupal_goto("/user/{$order->uid}/orders/{$order->order_id}");
+	} else {
+		// показываем кнопку для оплаты
+		return cloudpayments_build_redirect_form($form, $form_state, $order, $payment_method);
+	}
+}
+
+/**
+ * Кнопка для оплаты заказа
+ *
+ * Returns form elements that should be submitted to the redirected payment
+ * service; because of the array merge that happens upon return, the service’s
+ * URL that should receive the POST variables should be set in the #action
+ * property of the returned form array.
+ */
+function cloudpayments_build_redirect_form($form, &$form_state, $order, $payment_method) {
+	$wrapper = entity_metadata_wrapper('commerce_order', $order);
+	$order_wrapper = entity_metadata_wrapper('commerce_order', $order);
+	$currency_code = $wrapper->commerce_order_total->currency_code->value();
+	$amount_not_formated = $wrapper->commerce_order_total->amount->value();
+	$amount = commerce_currency_amount_to_decimal($amount_not_formated, $currency_code);
+	$aItems = [];
+	$iTaxProduct = variable_get('cloudpayments_tax_product',-1);
+	foreach ($order_wrapper->commerce_line_items as $delta => $line_item_wrapper) {
+		if ($line_item_wrapper->value()->type == 'product') {
+			$oProduct = $line_item_wrapper->commerce_product->value();//			pr($oProduct);
+			$aInfo = $line_item_wrapper->commerce_unit_price->info();
+			$aComponent = $aInfo['parent']->value()->commerce_unit_price['und'][0]['data']['components'];
+			if ($iTaxProduct == -2) {
+				// берем налог из товара
+				$iTax = 0;
+				foreach ($aComponent as $aCom) {
+					$aData = explode('|', $aCom['name']);
+					if (count($aData) && $aData[0] == 'tax') {
+						$iTax = $aCom['price']['data']['tax_rate']['rate'] * 100;
+						break;
+					}
+				}
+			} else {
+				$iTax = $iTaxProduct;
+			}
+			
+			$aItem = [
+				"label" => $oProduct->title,
+				"price" => $line_item_wrapper->commerce_unit_price->value()['amount']/100,
+				"quantity" => $aInfo['parent']->value()->quantity,
+				"amount" => $line_item_wrapper->commerce_total->value()['amount']/100,
+				"vat" => $iTax
+			];
+			
+			array_push($aItems, $aItem);
+		}
+		if ($line_item_wrapper->value()->type == 'shipping') {
+			$shipping = $line_item_wrapper->value();
+			
+			$amount = $shipping->commerce_total['und'][0]['amount'];
+			$iTax = variable_get('cloudpayments_tax_shipping',-1);
+			if ($iTax == -1) $iTax = null;
+			$aItem = array(
+				'label' => substr($shipping->line_item_label, 0, 64),
+				'price' => $amount/100,
+				'quantity' => 1,
+				'amount' => $amount/100,
+				'vat' =>$iTax,
+			);
+			if (round($amount, 2) * 100 > 0) {
+				array_push($aItems, $aItem);
+			}
+		}
+	}
+	
+	$form['#method'] = 'POST';
+	$form['#action'] = '#cloudpayments';
+	$form['success'] = array(
+		'#id' => 'success',
+		'#type' => 'hidden',
+		'#name' => 'success',
+		'#value' => 1,
+	);
+	$form['submit'] = array(
+		'#id' => 'cloudpayments_button',
+		'#type' => 'submit',
+		'#name' => 'success',
+		'#value' => t('Pay via CloudPayments'),
+	);
+	$sPublicId= variable_get('cloudpayments_public_id','');
+	$sScheme = variable_get('cloudpayments_scheme','sms');
+	$sSendCheck = variable_get('cloudpayments_send_check','sms');
+	$sLocalizaton = variable_get('cloudpayments_localization','ru_RU');
+	$iTaxSystem = variable_get('cloudpayments_tax_system',0);
+	/**
+	 * Пытаемся получить телефон пользователя если он есть
+	 */
+	$sFieldPhone = variable_get('cloudpayments_field_phone',0);
+	if ($sFieldPhone) {
+		$sFieldPhone = $order_wrapper->commerce_customer_billing->$sFieldPhone->value();
+		$sFieldPhone = preg_replace('~[^0-9]+~','',$sFieldPhone);
+	}
+	$form['message'] = [
+			'#type' => 'fieldset',
+			'#value' => '<script src="https://widget.cloudpayments.ru/bundles/cloudpayments"></script>
+						<script>
+							var oBut = document.getElementById("cloudpayments_button");
+							oBut.onclick = function () {
+								var widget = new cp.CloudPayments({language:"'.$sLocalizaton.'"});
+								widget.'.($sScheme == 'sms' ? 'charge' : 'auth').'({ // options
+										publicId: "'.$sPublicId.'",  //id из личного кабинета
+										description: "'.t('Order payment').' №'.$order->order_id.'", //назначение
+										amount: '.$amount.', //сумма
+										currency: "'.$currency_code.'", //валюта
+										invoiceId: "'.$order->order_id.'", //номер заказа  (необязательно)
+										accountId: "'.$order->mail.'", //идентификатор плательщика (необязательно)
+										data: {
+											order_number: "'.$order->order_id.'", //произвольный набор параметров
+											phone: "'.$sFieldPhone.'",
+											cloudPayments: '. ($sSendCheck == 'yes' ? '{ customerReceipt: { Items:'.json_encode($aItems).', taxationSystem: '.$iTaxSystem.', email: "'.$order->mail.'", phone: "'.$sFieldPhone.'"} }' : "{}") . '
+										}
+									},
+									function (options) { // success
+										var oForm = document.getElementById("cloudpayments-redirect-form");
+										oForm.submit();
+									},
+									function (reason, options) { // fail
+										//действие при неуспешной оплате
+									});
+								return false;
+							};
+						</script>
+						<style>#edit-message{ display: none; }</style>
+						'
+	];
+	
+	return $form;
+}
+
+function cloudpayments_check()
+{
+	$oOrder = commerce_order_load($_POST['InvoiceId']);
+	$oWrapper = entity_metadata_wrapper('commerce_order', $oOrder);
+	$amount_not_formated = $oWrapper->commerce_order_total->amount->value();
+	$currency_code = $oWrapper->commerce_order_total->currency_code->value();
+	$fAmount = commerce_currency_amount_to_decimal($amount_not_formated, $currency_code);
+	
+	$oCloudPayments = new CloudPaymentsAPI();
+	$oCloudPayments->Check($fAmount);
+}
+
+function cloudpayments_pay()
+{
+	$oCloudPayments = new CloudPaymentsAPI();
+	$oCloudPayments->Pay();
+}
+
+function cloudpayments_confirm()
+{
+	$oCloudPayments = new CloudPaymentsAPI();
+	$oCloudPayments->Confirm();
+}
+
+function cloudpayments_refund()
+{
+	$oCloudPayments = new CloudPaymentsAPI();
+	$oCloudPayments->Refund();
+}
+
+/**
+ * Implements hook_commerce_order_presave().
+ */
+function cloudpayments_commerce_order_presave($order)
+{
+	if (!$order->order_id) return false;
+	$oOrder = commerce_order_load($order->order_id);
+	$oWrapper = entity_metadata_wrapper('commerce_order', $order);
+	$amount_not_formated = $oWrapper->commerce_order_total->amount->value();
+	$currency_code = $oWrapper->commerce_order_total->currency_code->value();
+	$fAmount = commerce_currency_amount_to_decimal($amount_not_formated, $currency_code);
+	$oCloudPayments = new CloudPaymentsAPI();
+	$iTransactionId = db_select('cloudpayments_transaction', 'ct')
+		->fields('ct', ['transaction_id'])
+		->condition('ct.order_id', $order->order_id)
+		->execute()
+		->fetchField();
+	if (!$iTransactionId) return false;
+	$sScheme = variable_get('cloudpayments_scheme');
+	if ($sScheme == 'dms' && $order->status == variable_get('cloudpayments_status_cp_confirmed')) {
+		if (!isset($_POST['TransactionId'])) {
+			drupal_set_message(t('Confirmation request has been sent to the payment system'));
+			$oCloudPayments->MakeRequest('payments/confirm', [
+				'TransactionId' => $iTransactionId,
+				'Amount' => $fAmount
+			]);
+			// возвращаем предыдущий статус заказа если запрос из админки, а не по хуку
+			$order->status = $oOrder->status;
+		}
+	} elseif ($order->status == variable_get('cloudpayments_status_refund')) {
+		if (!isset($_POST['TransactionId'])) {
+			drupal_set_message(t('Refund request has been sent to the payment system'));
+			$oCloudPayments->MakeRequest('payments/refund', [
+				'TransactionId' => $iTransactionId,
+				'Amount' => $fAmount
+			]);
+			// возвращаем предыдущий статус заказа если запрос из админки, а не по хуку
+			$order->status = $oOrder->status;
+		}
+	} elseif ($sScheme == 'dms' && $order->status == variable_get('cloudpayments_status_canceled')) {
+		drupal_set_message(t('Cancel request has been sent to the payment system'));
+		$oCloudPayments->MakeRequest('payments/void', [
+			'TransactionId' => $iTransactionId
+		]);
+	}
+}
+
+/**
+ * Implements hook_commerce_order_status_info().
+ */
+function cloudpayments_commerce_order_status_info()
+{
+	$order_statuses = array();
+	
+	$order_statuses['cp_refund'] = array(
+		'name' => 'cp_refund',
+		'title' => t('CP - Refund'),
+		'state' => 'canceled',
+	);
+	
+	$order_statuses['cp_authorized'] = array(
+		'name' => 'cp_authorized',
+		'title' => t('CP - Authorized (Money Blocked)'),
+		'state' => 'pending',
+	);
+	return $order_statuses;
+};

@@ -1,0 +1,6 @@
+name = CloudPayments
+description = "CloudPayments module"
+package = CloudPayments
+core = 7.x
+version = 0.1.0
+configure = admin/config/system/cloudpayments

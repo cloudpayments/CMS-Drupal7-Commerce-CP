@@ -1,0 +1,152 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Drupal Cloudpayments\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-03-05 08:48+0300\n"
+"PO-Revision-Date: 2018-03-05 08:53+0300\n"
+"Last-Translator: Nikolai Prokopov\n"
+"Language-Team: Russian (Russia)\n"
+"Language: ru-RU\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10 >= 2 && "
+"n%10<=4 &&(n%100<10||n%100 >= 20)? 1 : 2);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Loco https://localise.biz\n"
+"X-Loco-Source-Locale: en-GB\n"
+"X-Loco-Project-Id: 43215\n"
+"X-Loco-Api-Version: 1.0.18 20180227-1"
+
+#:
+msgid "CP - Refund"
+msgstr "CP - Возврат"
+
+#:
+msgid "Refund order"
+msgstr "Возврат заказа"
+
+#:
+msgid "CP - Authorized (Money Blocked)"
+msgstr "CP - Платёж авторизован (Деньги заблокированы)"
+
+#:
+msgid "CloudPayments Settings"
+msgstr "CloudPayments Настройки"
+
+#:
+msgid "Pay via CloudPayments"
+msgstr "Оплатить с помощью CloudPayments"
+
+#:
+msgid "Order payment"
+msgstr "Оплата заказа"
+
+#:
+msgid "Payment scheme"
+msgstr "Схемы проведения платежа"
+
+#:
+msgid "Send receipt"
+msgstr "Отправка чеков"
+
+#:
+msgid "Widget localization"
+msgstr "Локализация виджета"
+
+#:
+msgid "Taxation system"
+msgstr "Система налогообложения"
+
+#:
+msgid "0 — General tax system"
+msgstr "0 — Общая система налогообложения"
+
+#:
+msgid "1 — Simplified taxation system"
+msgstr "1 — Упрощенная система налогообложения (Доход)"
+
+#:
+msgid "2 — Simplified taxation system"
+msgstr "2 — Упрощенная система налогообложения (Доход минус Расход)"
+
+#:
+msgid "3 — Single tax on imputed earnings"
+msgstr "3 — Единый налог на вмененный доход"
+
+#:
+msgid "4 — Single agricultural tax"
+msgstr "4 — Единый сельскохозяйственный налог"
+
+#:
+msgid "5 — Patent taxation system"
+msgstr "5 — Патентная система налогообложения"
+
+#:
+msgid "Shipping tax"
+msgstr "Ставка налога для доставки"
+#:
+msgid "Product tax"
+msgstr "Ставка налога для товаров"
+#:
+msgid "Take from product"
+msgstr "Брать из продукта"
+
+#:
+msgid "Order payed successfully"
+msgstr "Заказ Оплачен"
+
+#:
+msgid "The status of the new (unpaid) order"
+msgstr "Статус оформленного (неоплаченного) заказа"
+
+#:
+msgid "Authorized payment status (DMS)"
+msgstr "Статус авторизованного платежа (DMS)"
+
+#:
+msgid "Confirmed payment status (DMS)"
+msgstr "Статус подтвержденного платежа (DMS)"
+
+#:
+msgid "Order cancelled (DMS)"
+msgstr "Заказ отменён (DMS)"
+
+#:
+msgid "Confirmation request has been sent to the payment system"
+msgstr "Платежной системе отправлен запрос о подтверждении заказа"
+
+#:
+msgid "Refund request has been sent to the payment system"
+msgstr "Платежной системе отправлен запрос о возврате заказа"
+
+#:
+msgid "Cancel request has been sent to the payment system"
+msgstr "Платежной системе отправлен запрос об отмене заказа"
+
+#:
+msgid "VAT Free"
+msgstr "НДС не облагается"
+
+#:
+msgid "VAT 0%"
+msgstr "НДС 0%"
+
+#:
+msgid "VAT 10%"
+msgstr "НДС 10%"
+
+#:
+msgid "VAT 18%"
+msgstr "НДС 18%"
+
+#:
+msgid "VAT 10/110"
+msgstr "расчетный НДС 10/110"
+
+#:
+msgid "VAT 18/118"
+msgstr "расчетный НДС 18/118"
+
+#:
+msgid "Field with phone"
+msgstr "Поле с телефоном"
