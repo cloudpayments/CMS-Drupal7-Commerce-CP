@@ -80,6 +80,10 @@ function cloudpayments_commerce_payment_method_info()
  */
 function cloudpayments_redirect_form($form, &$form_state, $order, $payment_method) {
 	if (isset($_POST['success'])) {
+		global $user;
+		// авторизуем пользователя
+		$user = user_load($order->uid);
+		user_login_finalize();
 		drupal_goto("/user/{$order->uid}/orders/{$order->order_id}");
 	} else {
 		// показываем кнопку для оплаты

@@ -1,5 +1,5 @@
 name = CloudPayments
-description = "CloudPayments module"
+description = "CloudPayments module for Drupal Commerce"
 package = CloudPayments
 core = 7.x
 version = 0.1.0
