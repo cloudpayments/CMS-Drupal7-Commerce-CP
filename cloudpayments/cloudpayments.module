@@ -171,6 +171,7 @@ function cloudpayments_build_redirect_form($form, &$form_state, $order, $payment
 	);
 	$sPublicId= variable_get('cloudpayments_public_id','');
 	$sScheme = variable_get('cloudpayments_scheme','sms');
+	$sSkin = variable_get('cloudpayments_skin','');
 	$sSendCheck = variable_get('cloudpayments_send_check','sms');
 	$sLocalizaton = variable_get('cloudpayments_localization','ru_RU');
 	$iTaxSystem = variable_get('cloudpayments_tax_system',0);
@@ -184,7 +185,7 @@ function cloudpayments_build_redirect_form($form, &$form_state, $order, $payment
 	}
 	$form['message'] = [
 			'#type' => 'fieldset',
-			'#value' => '<script src="https://widget.cloudpayments.ru/bundles/cloudpayments"></script>
+			'#value' => '<script src="https://widget.cloudpayments.ru/bundles/cloudpayments?cms=Drupal"></script>
 						<script>
 							var oBut = document.getElementById("cloudpayments_button");
 							oBut.onclick = function () {
@@ -193,13 +194,14 @@ function cloudpayments_build_redirect_form($form, &$form_state, $order, $payment
 										publicId: "'.$sPublicId.'",  //id из личного кабинета
 										description: "'.t('Order payment').' №'.$order->order_id.'", //назначение
 										amount: '.$amount.', //сумма
+										skin: "'.$sSkin.'",
 										currency: "'.$currency_code.'", //валюта
 										invoiceId: "'.$order->order_id.'", //номер заказа  (необязательно)
 										accountId: "'.$order->mail.'", //идентификатор плательщика (необязательно)
 										data: {
 											order_number: "'.$order->order_id.'", //произвольный набор параметров
 											phone: "'.$sFieldPhone.'",
-											cloudPayments: '. ($sSendCheck == 'yes' ? '{ customerReceipt: { Items:'.json_encode($aItems).', taxationSystem: '.$iTaxSystem.', email: "'.$order->mail.'", phone: "'.$sFieldPhone.'"} }' : "{}") . '
+											cloudPayments: '. ($sSendCheck == 'yes' ? '{ customerReceipt: { Items:'.json_encode($aItems).', taxationSystem: '.$iTaxSystem.', calculationPlace: "www.'.$_SERVER["SERVER_NAME"].'", email: "'.$order->mail.'", phone: "'.$sFieldPhone.'"} }' : "{}") . '
 										}
 									},
 									function (options) { // success

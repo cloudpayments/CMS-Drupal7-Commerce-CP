@@ -46,6 +46,10 @@ msgid "Payment scheme"
 msgstr "Схемы проведения платежа"
 
 #:
+msgid "Payment skin"
+msgstr "Дизайн виджета"
+
+#:
 msgid "Send receipt"
 msgstr "Отправка чеков"
 
@@ -136,16 +140,16 @@ msgid "VAT 10%"
 msgstr "НДС 10%"
 
 #:
-msgid "VAT 18%"
-msgstr "НДС 18%"
+msgid "VAT 20%"
+msgstr "НДС 20%"
 
 #:
 msgid "VAT 10/110"
 msgstr "расчетный НДС 10/110"
 
 #:
-msgid "VAT 18/118"
-msgstr "расчетный НДС 18/118"
+msgid "VAT 20/120"
+msgstr "расчетный НДС 20/120"
 
 #:
 msgid "Field with phone"

@@ -2,5 +2,5 @@ name = CloudPayments
 description = "CloudPayments module for Drupal Commerce"
 package = CloudPayments
 core = 7.x
-version = 0.1.0
+version = 0.1.1
 configure = admin/config/system/cloudpayments

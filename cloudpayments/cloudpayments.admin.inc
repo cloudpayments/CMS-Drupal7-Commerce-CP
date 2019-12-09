@@ -28,7 +28,18 @@ function cloudpayments_admin_settings() {
 			'dms' => 'DMS',
 		),
 	);
-
+    
+    $form['cloudpayments_skin'] = array(
+		'#type' => 'select',
+		'#title' => t('Payment skin'),
+		'#default_value' => variable_get('cloudpayments_skin','classic'),
+		'#options' => array(
+			'classic' => 'Classic',
+			'modern' => 'Modern',
+			'mini' => 'Mini',
+		),
+	);
+    
 	$form['cloudpayments_send_check'] = array(
 		'#type' => 'select',
 		'#title' => t('Send receipt'),
@@ -77,9 +88,9 @@ function cloudpayments_admin_settings() {
 			'-1' => 'VAT Free',
 			'0' => 'VAT 0%',
 			'10' => 'VAT 10%',
-			'18' => 'VAT 18%',
+			'20' => 'VAT 20%',
 			'110' => 'VAT 10/110',
-			'118' => 'VAT 18/118',
+			'120' => 'VAT 20/120',
 			'-2' => t('Take from product')
 		)
 	);
@@ -93,9 +104,9 @@ function cloudpayments_admin_settings() {
 			'-1' => 'VAT Free',
 			'0' => 'VAT 0%',
 			'10' => 'VAT 10%',
-			'18' => 'VAT 18%',
+			'20' => 'VAT 20%',
 			'110' => 'VAT 10/110',
-			'118' => 'VAT 18/118',
+			'120' => 'VAT 20/120',
 			'-2' => t('Take from product')
 		)
 	);
